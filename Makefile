@@ -6,14 +6,16 @@ GHC        = ghc
 
 # Default goal.
 
-all : Latte
+all : Main
 
-Latte : AbsLatte.hs LexLatte.hs ParLatte.hs PrintLatte.hs TestLatte.hs
-	${GHC} ${GHC_OPTS} $@
+Main : 
+	${GHC} Main.hs --make -o Latte
 
 # Rules for cleaning generated files.
 
 clean :
-	-rm -f *.hi *.o *.log *.aux *.dvi
+	find . -name "*.hi" -type f -delete
+	find . -name "*.o" -type f -delete
+	rm Latte
 
 # EOF
