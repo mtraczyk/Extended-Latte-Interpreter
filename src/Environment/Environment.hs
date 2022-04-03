@@ -29,8 +29,8 @@ getFunEnv (TFun _ _ env) = env
 getStoreSimpleType :: Location -> Store -> SimpleType
 getStoreSimpleType loc Store{..} = fromJust $ M.lookup loc vStore
 
-updateStoreValue :: Location -> SimpleType -> Store -> Store
-updateStoreValue loc val Store{..} = Store {vStore = M.insert loc val vStore,
+updateStoreSimpleType :: Location -> SimpleType -> Store -> Store
+updateStoreSimpleType loc val Store{..} = Store {vStore = M.insert loc val vStore,
   fStore = fStore, vAlloc = vAlloc, fAlloc = fAlloc}
 
 putStoreSimpleType :: SimpleType -> Store -> (Location, Store)
@@ -58,8 +58,39 @@ getEnvLocation ident Env{..} = fromJust $ M.lookup ident env
 putEnvLocation :: Ident -> Location -> Env -> Env
 putEnvLocation ident loc Env{..} = Env {env = M.insert ident loc env}
 
+getVEnv :: EvalEnvironment -> Env
+getVEnv EvalEnvironment{..} = vEnv
 
+getFEnv :: EvalEnvironment -> Env
+getFEnv EvalEnvironment{..} = fEnv
 
+getSimpleTypeValue :: Ident -> EvalEnvironment -> SimpleType
+getSimpleTypeValue ident env = getStoreSimpleType (getEnvLocation ident (getVEnv env)) (store env)
+
+updateSimpleTypeValue :: Ident -> EvalEnvironment -> SimpleType -> EvalEnvironment
+updateSimpleTypeValue ident env val = EvalEnvironment {vEnv = vEnv env, fEnv = fEnv env, store = store'}
+  where
+    store' = updateStoreSimpleType (getEnvLocation ident (getVEnv env)) val (store env)
+
+putSimpleTypeValue :: Ident -> EvalEnvironment -> SimpleType -> EvalEnvironment
+putSimpleTypeValue ident env val = EvalEnvironment {vEnv = vEnv', fEnv = fEnv env, store = store'}
+  where
+    (loc', store') = putStoreSimpleType val (store env)
+    vEnv' = putEnvLocation ident loc' (vEnv env)
+
+getFunctionTypeValue :: Ident -> EvalEnvironment -> FunctionType
+getFunctionTypeValue ident env = getStoreFunctionType (getEnvLocation ident (getFEnv env)) (store env)
+
+updateFunctionTypeValue :: Ident -> EvalEnvironment -> FunctionType -> EvalEnvironment
+updateFunctionTypeValue ident env val = EvalEnvironment {vEnv = vEnv env, fEnv = fEnv env, store = store'}
+  where
+    store' = updateStoreFunctionType (getEnvLocation ident (getFEnv env)) val (store env)
+
+putFunctionTypeValue :: Ident -> EvalEnvironment -> FunctionType -> EvalEnvironment
+putFunctionTypeValue ident env val = EvalEnvironment {vEnv = vEnv env, fEnv = fEnv', store = store'}
+  where
+    (loc', store') = putStoreFunctionType val (store env)
+    fEnv' = putEnvLocation ident loc' (fEnv env)
 
 
 
