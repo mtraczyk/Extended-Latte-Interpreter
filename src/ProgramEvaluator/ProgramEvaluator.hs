@@ -22,7 +22,7 @@ class ProgramEvaluator a where
 buildinFunctions = ["printInt", "printBool", "printString"]
 
 evalBuildinFunction :: Ident -> [SimpleType] -> SimpleTypeEvaluator
-evalBuildinFunction (Ident name) [val] = case name `elem` buildinFunctions of
+evalBuildinFunction (Ident name) val = case name `elem` buildinFunctions of
   True -> do
     liftIO $ putStrLn (show val)
     return None
@@ -30,7 +30,7 @@ evalBuildinFunction (Ident name) [val] = case name `elem` buildinFunctions of
 
 instance ProgramEvaluator Program where
   eval (Program pos topDefs) = do
-    evalBuildinFunction (Ident "printInt") [(Environment.Environment.Int 4)]
+    evalBuildinFunction (Ident "printInt") [(Environment.Environment.Int 4), (Environment.Environment.Bool True)]
     return (Environment.Environment.Int 3)
 --    mapM_ eval topDefs
 --    eval $ EApp position (Ident "main") []
