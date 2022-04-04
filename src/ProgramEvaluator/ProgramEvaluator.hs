@@ -18,8 +18,19 @@ evalProgram program = runExceptT $ evalStateT (eval program) emptyEvalEnvironmen
 class ProgramEvaluator a where
   eval :: a -> SimpleTypeEvaluator
 
+-- Buildin functions
+buildinFunctions = ["printInt", "printBool", "printString"]
+
+evalBuildinFunction :: Ident -> [SimpleType] -> SimpleTypeEvaluator
+evalBuildinFunction (Ident name) [val] = case name `elem` buildinFunctions of
+  True -> do
+    liftIO $ putStrLn (show val)
+    return None
+  False -> throwError $ UndefinedBuildinFunction Nothing
+
 instance ProgramEvaluator Program where
   eval (Program pos topDefs) = do
+    evalBuildinFunction (Ident "printInt") [(Environment.Environment.Int 4)]
     return (Environment.Environment.Int 3)
 --    mapM_ eval topDefs
 --    eval $ EApp position (Ident "main") []

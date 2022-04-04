@@ -80,7 +80,9 @@ interpreter (Right tree) = do
     Left err -> do
       hPrint stderr err
       exitFailure
-    Right _ -> exitSuccess
+    Right ret -> do
+      putStrLn $ show ret
+      exitSuccess
 
 main :: IO ()
 main = do
