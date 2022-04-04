@@ -23,6 +23,7 @@ import Syntax.AbsLatte   ( Program )
 import Parser.LexLatte   ( Token, mkPosToken )
 import Parser.ParLatte   ( pProgram, myLexer )
 import Exception.SkelLatte  ()
+import ProgramEvaluator.ProgramEvaluator ( evalProgram )
 
 type Err        = Either String
 type ParseFun a = [Token] -> Err a
@@ -45,7 +46,7 @@ run v p s =
       exitFailure
     Right tree -> do
       putStrLn "\nParse Successful!"
-      typeChecker (pProgram ts)
+--      typeChecker (pProgram ts)
       interpreter (pProgram ts)
   where
   ts = myLexer s
@@ -61,19 +62,25 @@ usage = do
     , "  -s (files)      Silent mode. Parse content of files silently."
     ]
 
-typeChecker :: Either String Program -> IO ()
-typeChecker (Left errMsg) = do
-  hPrint stderr errMsg
-  exitFailure
-
-typeChecker (Right tree) = putStrLn "\nType Check"
+--typeChecker :: Either String Program -> IO ()
+--typeChecker (Left errMsg) = do
+--  hPrint stderr errMsg
+--  exitFailure
+--
+--typeChecker (Right tree) = putStrLn "\nType Check"
 
 interpreter :: Either String Program -> IO ()
 interpreter (Left errMsg) = do
   hPrint stderr errMsg
   exitFailure
 
-interpreter (Right tree) = putStrLn "\nInterpreter"
+interpreter (Right tree) = do
+  res <- evalProgram tree
+  case res of
+    Left err -> do
+      hPrint stderr err
+      exitFailure
+    Right _ -> exitSuccess
 
 main :: IO ()
 main = do

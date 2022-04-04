@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Evaluator.Environment where
+module Environment.Environment where
 
 import qualified Data.Map as M
 import Data.Maybe
@@ -14,7 +14,7 @@ data EvalEnvironment = EvalEnvironment {vEnv :: Env, fEnv :: Env, store :: Store
 data Store = Store {vStore :: M.Map Location SimpleType,
   fStore :: M.Map Location FunctionType, vAlloc :: Int, fAlloc :: Int}
 
-data SimpleType = Int Integer | Str String | Bool Bool deriving (Eq, Show)
+data SimpleType = Int Integer | Str String | Bool Bool | None deriving (Eq, Show)
 data FunctionType = TFun [Arg] Block Env | TVoid
 
 getFunctionArgs :: FunctionType -> [Arg]
@@ -92,7 +92,8 @@ putFunctionTypeValue ident env val = EvalEnvironment {vEnv = vEnv env, fEnv = fE
     (loc', store') = putStoreFunctionType val (store env)
     fEnv' = putEnvLocation ident loc' (fEnv env)
 
-
+emptyStore = Store {vStore = M.empty, fStore = M.empty, vAlloc = 0, fAlloc = 0}
+emptyEvalEnvironment = EvalEnvironment {vEnv = Env {env = M.empty}, fEnv = Env {env = M.empty}, store = emptyStore}
 
 
 
