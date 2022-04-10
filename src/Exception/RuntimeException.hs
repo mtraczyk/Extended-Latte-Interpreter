@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Exception.RuntimeException where
 
-import Syntax.AbsLatte
+import Grammar.AbsLatte
 
 type RuntimeException = RuntimeException' BNFC'Position
 data RuntimeException' a = UndefinedException a | DivideByZeroException a | UndefinedBuildinFunction a

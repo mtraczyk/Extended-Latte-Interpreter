@@ -5,7 +5,7 @@ module ProgramEvaluator.ProgramEvaluator where
 import Environment.Environment
 import Exception.RuntimeException
 import Prelude
-import Syntax.AbsLatte
+import Grammar.AbsLatte
 import Control.Monad.Except
 import Control.Monad.State
 

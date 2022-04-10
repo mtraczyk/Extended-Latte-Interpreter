@@ -4,7 +4,7 @@ module Environment.Environment where
 import qualified Data.Map as M
 import Data.Maybe
 import Prelude
-import Syntax.AbsLatte
+import Grammar.AbsLatte
 
 type Location = Int
 newtype Env = Env {env :: M.Map Ident Location}
