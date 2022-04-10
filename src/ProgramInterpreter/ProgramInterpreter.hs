@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances    #-}
-module ProgramEvaluator.ProgramEvaluator where
+module ProgramInterpreter.ProgramInterpreter where
 
 import Environment.Environment
 import Exception.RuntimeException
@@ -12,11 +12,11 @@ import Control.Monad.State
 type SimpleTypeEvaluator = Evaluator SimpleType
 type Evaluator a = StateT EvalEnvironment (ExceptT RuntimeException IO) a
 
-evalProgram :: Program -> IO (Either RuntimeException SimpleType)
-evalProgram program = runExceptT $ evalStateT (eval program) emptyEvalEnvironment
+interpretProgram :: Program -> IO (Either RuntimeException SimpleType)
+interpretProgram program = runExceptT $ evalStateT (runCode program) emptyEvalEnvironment
 
-class ProgramEvaluator a where
-  eval :: a -> SimpleTypeEvaluator
+class ProgramRunner a where
+  runCode :: a -> SimpleTypeEvaluator
 
 -- Buildin functions
 buildinFunctions = ["printInt", "printBool", "printString"]
@@ -28,19 +28,21 @@ evalBuildinFunction (Ident name) val = case name `elem` buildinFunctions of
     return None
   False -> throwError $ UndefinedBuildinFunction Nothing
 
-instance ProgramEvaluator Program where
-  eval (Program pos topDefs) = do
-
+instance ProgramRunner Program where
+  runCode (Program pos topDefs) = do
+    mapM_ runCode topDefs
+    -- eval main function
+    return None
 
 --    evalBuildinFunction (Ident "printInt") [(Environment.Environment.Int 4), (Environment.Environment.Bool True)]
 --    return (Environment.Environment.Int 3)
 --    mapM_ eval topDefs
 --    eval $ EApp position (Ident "main") []
 
-instance ProgramEvaluator TopDef where
-  eval (FnDef _ _ name args block) = do
+instance ProgramRunner TopDef where
+  runCode (FnDef _ _ name args block) = do
     env <- get
-    fEnv <- getFEnv env
+    let fEnv = getFEnv env
     let fun = TFun args block fEnv
     modify $ putFunctionTypeValue name fun
     return None

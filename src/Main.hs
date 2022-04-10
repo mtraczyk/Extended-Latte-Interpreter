@@ -23,7 +23,7 @@ import Grammar.AbsLatte   ( Program )
 import BNFCParser.LexLatte   ( Token, mkPosToken )
 import BNFCParser.ParLatte   ( pProgram, myLexer )
 import Exception.SkelLatte  ()
-import ProgramEvaluator.ProgramEvaluator ( evalProgram )
+import ProgramInterpreter.ProgramInterpreter ( interpretProgram )
 
 type Err        = Either String
 type ParseFun a = [Token] -> Err a
@@ -75,7 +75,7 @@ interpreter (Left errMsg) = do
   exitFailure
 
 interpreter (Right tree) = do
-  res <- evalProgram tree
+  res <- interpretProgram tree
   case res of
     Left err -> do
       hPrint stderr err
