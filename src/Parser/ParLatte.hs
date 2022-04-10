@@ -14,8 +14,8 @@ module Parser.ParLatte
 
 import Prelude
 
-import qualified AbsLatte
-import LexLatte
+import qualified Syntax.AbsLatte
+import Parser.LexLatte
 import qualified Data.Array as Happy_Data_Array
 import qualified Data.Bits as Bits
 import qualified GHC.Exts as Happy_GHC_Exts
