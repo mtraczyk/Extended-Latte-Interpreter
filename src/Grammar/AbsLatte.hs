@@ -14,7 +14,7 @@ import Prelude (Integer, String)
 import qualified Prelude as C
   ( Eq, Ord, Show, Read
   , Functor, Foldable, Traversable
-  , Int, Maybe(..)
+  , Int, Maybe(..)Latte.cf
   )
 import qualified Data.String
 
