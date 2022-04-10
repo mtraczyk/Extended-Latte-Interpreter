@@ -15,86 +15,86 @@ type Result = Err String
 failure :: Show a => a -> Result
 failure x = Left $ "Undefined case: " ++ show x
 
-transIdent :: Syntax.AbsLatte.Ident -> Result
+transIdent :: Grammar.AbsLatte.Ident -> Result
 transIdent x = case x of
-  Syntax.AbsLatte.Ident string -> failure x
+  Grammar.AbsLatte.Ident string -> failure x
 
-transProgram :: Show a => Syntax.AbsLatte.Program' a -> Result
+transProgram :: Show a => Grammar.AbsLatte.Program' a -> Result
 transProgram x = case x of
-  Syntax.AbsLatte.Program _ topdefs -> failure x
+  Grammar.AbsLatte.Program _ topdefs -> failure x
 
-transTopDef :: Show a => Syntax.AbsLatte.TopDef' a -> Result
+transTopDef :: Show a => Grammar.AbsLatte.TopDef' a -> Result
 transTopDef x = case x of
-  Syntax.AbsLatte.FnDef _ type_ ident args block -> failure x
+  Grammar.AbsLatte.FnDef _ type_ ident args block -> failure x
 
-transArg :: Show a => Syntax.AbsLatte.Arg' a -> Result
+transArg :: Show a => Grammar.AbsLatte.Arg' a -> Result
 transArg x = case x of
-  Syntax.AbsLatte.Arg _ type_ ident -> failure x
+  Grammar.AbsLatte.Arg _ type_ ident -> failure x
 
-transBlock :: Show a => Syntax.AbsLatte.Block' a -> Result
+transBlock :: Show a => Grammar.AbsLatte.Block' a -> Result
 transBlock x = case x of
-  Syntax.AbsLatte.Block _ stmts -> failure x
+  Grammar.AbsLatte.Block _ stmts -> failure x
 
-transStmt :: Show a => Syntax.AbsLatte.Stmt' a -> Result
+transStmt :: Show a => Grammar.AbsLatte.Stmt' a -> Result
 transStmt x = case x of
-  Syntax.AbsLatte.Empty _ -> failure x
-  Syntax.AbsLatte.BStmt _ block -> failure x
-  Syntax.AbsLatte.Decl _ type_ items -> failure x
-  Syntax.AbsLatte.Ass _ ident expr -> failure x
-  Syntax.AbsLatte.Incr _ ident -> failure x
-  Syntax.AbsLatte.Decr _ ident -> failure x
-  Syntax.AbsLatte.Ret _ expr -> failure x
-  Syntax.AbsLatte.VRet _ -> failure x
-  Syntax.AbsLatte.Cond _ expr stmt -> failure x
-  Syntax.AbsLatte.CondElse _ expr stmt1 stmt2 -> failure x
-  Syntax.AbsLatte.While _ expr stmt -> failure x
-  Syntax.AbsLatte.SExp _ expr -> failure x
+  Grammar.AbsLatte.Empty _ -> failure x
+  Grammar.AbsLatte.BStmt _ block -> failure x
+  Grammar.AbsLatte.Decl _ type_ items -> failure x
+  Grammar.AbsLatte.Ass _ ident expr -> failure x
+  Grammar.AbsLatte.Incr _ ident -> failure x
+  Grammar.AbsLatte.Decr _ ident -> failure x
+  Grammar.AbsLatte.Ret _ expr -> failure x
+  Grammar.AbsLatte.VRet _ -> failure x
+  Grammar.AbsLatte.Cond _ expr stmt -> failure x
+  Grammar.AbsLatte.CondElse _ expr stmt1 stmt2 -> failure x
+  Grammar.AbsLatte.While _ expr stmt -> failure x
+  Grammar.AbsLatte.SExp _ expr -> failure x
 
-transItem :: Show a => Syntax.AbsLatte.Item' a -> Result
+transItem :: Show a => Grammar.AbsLatte.Item' a -> Result
 transItem x = case x of
-  Syntax.AbsLatte.NoInit _ ident -> failure x
-  Syntax.AbsLatte.Init _ ident expr -> failure x
+  Grammar.AbsLatte.NoInit _ ident -> failure x
+  Grammar.AbsLatte.Init _ ident expr -> failure x
 
-transType :: Show a => Syntax.AbsLatte.Type' a -> Result
+transType :: Show a => Grammar.AbsLatte.Type' a -> Result
 transType x = case x of
-  Syntax.AbsLatte.Int _ -> failure x
-  Syntax.AbsLatte.Str _ -> failure x
-  Syntax.AbsLatte.Bool _ -> failure x
-  Syntax.AbsLatte.Void _ -> failure x
-  Syntax.AbsLatte.Fun _ type_ types -> failure x
+  Grammar.AbsLatte.Int _ -> failure x
+  Grammar.AbsLatte.Str _ -> failure x
+  Grammar.AbsLatte.Bool _ -> failure x
+  Grammar.AbsLatte.Void _ -> failure x
+  Grammar.AbsLatte.Fun _ type_ types -> failure x
 
-transExpr :: Show a => Syntax.AbsLatte.Expr' a -> Result
+transExpr :: Show a => Grammar.AbsLatte.Expr' a -> Result
 transExpr x = case x of
-  Syntax.AbsLatte.EVar _ ident -> failure x
-  Syntax.AbsLatte.ELitInt _ integer -> failure x
-  Syntax.AbsLatte.ELitTrue _ -> failure x
-  Syntax.AbsLatte.ELitFalse _ -> failure x
-  Syntax.AbsLatte.EApp _ ident exprs -> failure x
-  Syntax.AbsLatte.EString _ string -> failure x
-  Syntax.AbsLatte.Neg _ expr -> failure x
-  Syntax.AbsLatte.Not _ expr -> failure x
-  Syntax.AbsLatte.EMul _ expr1 mulop expr2 -> failure x
-  Syntax.AbsLatte.EAdd _ expr1 addop expr2 -> failure x
-  Syntax.AbsLatte.ERel _ expr1 relop expr2 -> failure x
-  Syntax.AbsLatte.EAnd _ expr1 expr2 -> failure x
-  Syntax.AbsLatte.EOr _ expr1 expr2 -> failure x
+  Grammar.AbsLatte.EVar _ ident -> failure x
+  Grammar.AbsLatte.ELitInt _ integer -> failure x
+  Grammar.AbsLatte.ELitTrue _ -> failure x
+  Grammar.AbsLatte.ELitFalse _ -> failure x
+  Grammar.AbsLatte.EApp _ ident exprs -> failure x
+  Grammar.AbsLatte.EString _ string -> failure x
+  Grammar.AbsLatte.Neg _ expr -> failure x
+  Grammar.AbsLatte.Not _ expr -> failure x
+  Grammar.AbsLatte.EMul _ expr1 mulop expr2 -> failure x
+  Grammar.AbsLatte.EAdd _ expr1 addop expr2 -> failure x
+  Grammar.AbsLatte.ERel _ expr1 relop expr2 -> failure x
+  Grammar.AbsLatte.EAnd _ expr1 expr2 -> failure x
+  Grammar.AbsLatte.EOr _ expr1 expr2 -> failure x
 
-transAddOp :: Show a => Syntax.AbsLatte.AddOp' a -> Result
+transAddOp :: Show a => Grammar.AbsLatte.AddOp' a -> Result
 transAddOp x = case x of
-  Syntax.AbsLatte.Plus _ -> failure x
-  Syntax.AbsLatte.Minus _ -> failure x
+  Grammar.AbsLatte.Plus _ -> failure x
+  Grammar.AbsLatte.Minus _ -> failure x
 
-transMulOp :: Show a => Syntax.AbsLatte.MulOp' a -> Result
+transMulOp :: Show a => Grammar.AbsLatte.MulOp' a -> Result
 transMulOp x = case x of
-  Syntax.AbsLatte.Times _ -> failure x
-  Syntax.AbsLatte.Div _ -> failure x
-  Syntax.AbsLatte.Mod _ -> failure x
+  Grammar.AbsLatte.Times _ -> failure x
+  Grammar.AbsLatte.Div _ -> failure x
+  Grammar.AbsLatte.Mod _ -> failure x
 
-transRelOp :: Show a => Syntax.AbsLatte.RelOp' a -> Result
+transRelOp :: Show a => Grammar.AbsLatte.RelOp' a -> Result
 transRelOp x = case x of
-  Syntax.AbsLatte.LTH _ -> failure x
-  Syntax.AbsLatte.LE _ -> failure x
-  Syntax.AbsLatte.GTH _ -> failure x
-  Syntax.AbsLatte.GE _ -> failure x
-  Syntax.AbsLatte.EQU _ -> failure x
-  Syntax.AbsLatte.NE _ -> failure x
+  Grammar.AbsLatte.LTH _ -> failure x
+  Grammar.AbsLatte.LE _ -> failure x
+  Grammar.AbsLatte.GTH _ -> failure x
+  Grammar.AbsLatte.GE _ -> failure x
+  Grammar.AbsLatte.EQU _ -> failure x
+  Grammar.AbsLatte.NE _ -> failure x
