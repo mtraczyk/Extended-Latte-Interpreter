@@ -19,9 +19,9 @@ import System.Exit        ( exitFailure, exitSuccess )
 import System.IO          ( hPrint, stderr )
 import Control.Monad      ( when )
 
-import Syntax.AbsLatte   ( Program )
-import Parser.LexLatte   ( Token, mkPosToken )
-import Parser.ParLatte   ( pProgram, myLexer )
+import Grammar.AbsLatte   ( Program )
+import BNFCParser.LexLatte   ( Token, mkPosToken )
+import BNFCParser.ParLatte   ( pProgram, myLexer )
 import Exception.SkelLatte  ()
 import ProgramEvaluator.ProgramEvaluator ( evalProgram )
 
