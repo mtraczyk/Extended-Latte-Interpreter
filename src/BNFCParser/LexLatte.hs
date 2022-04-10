@@ -7,7 +7,7 @@
 
 {-# LANGUAGE PatternSynonyms #-}
 
-module Parser.LexLatte where
+module BNFCParser.LexLatte where
 
 import Prelude
 
