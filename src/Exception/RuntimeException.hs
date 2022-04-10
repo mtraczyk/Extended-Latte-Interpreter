@@ -8,12 +8,12 @@ data RuntimeException' a = UndefinedException a | DivideByZeroException a | Unde
 
 instance Show RuntimeException where
   show (UndefinedException pos) =
-    "RUNTIME EXCEPTION: Undefined exception! At " ++ showPosition pos
+    "RUNTIME EXCEPTION: Undefined exception! At " ++ showPos pos
   show (UndefinedBuildinFunction pos) =
-    "RUNTIME EXCEPTION: Undefined buildin function! At " ++ showPosition pos
+    "RUNTIME EXCEPTION: Undefined buildin function! At " ++ showPos pos
   show (DivideByZeroException pos) =
-    "RUNTIME EXCEPTION: Divide by zero! At " ++ showPosition pos
+    "RUNTIME EXCEPTION: Divide by zero! At " ++ showPos pos
 
-showPosition :: BNFC'Position -> String
-showPosition (Just (line, column)) = "line: " ++ show line ++ ", " ++ "column: " ++ show column
-showPosition _ = "Not specified"
+showPos :: BNFC'Position -> String
+showPos (Just (line, column)) = "line: " ++ show line ++ ", " ++ "column: " ++ show column
+showPos _ = "Error position not specified."

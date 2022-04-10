@@ -8,7 +8,7 @@
 
 -- | The abstract syntax of language Latte.
 
-module Syntax.AbsLatte where
+module AbsLatte where
 
 import Prelude (Integer, String)
 import qualified Prelude as C
@@ -47,6 +47,8 @@ data Stmt' a
     | Cond a (Expr' a) (Stmt' a)
     | CondElse a (Expr' a) (Stmt' a) (Stmt' a)
     | While a (Expr' a) (Stmt' a)
+    | Break a
+    | Continue a
     | SExp a (Expr' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
@@ -135,6 +137,8 @@ instance HasPosition Stmt where
     Cond p _ _ -> p
     CondElse p _ _ _ -> p
     While p _ _ -> p
+    Break p -> p
+    Continue p -> p
     SExp p _ -> p
 
 instance HasPosition Item where
