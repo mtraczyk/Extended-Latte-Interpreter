@@ -30,9 +30,18 @@ evalBuildinFunction (Ident name) val = case name `elem` buildinFunctions of
 
 instance ProgramEvaluator Program where
   eval (Program pos topDefs) = do
-    evalBuildinFunction (Ident "printInt") [(Environment.Environment.Int 4), (Environment.Environment.Bool True)]
-    return (Environment.Environment.Int 3)
+
+
+--    evalBuildinFunction (Ident "printInt") [(Environment.Environment.Int 4), (Environment.Environment.Bool True)]
+--    return (Environment.Environment.Int 3)
 --    mapM_ eval topDefs
 --    eval $ EApp position (Ident "main") []
 
+instance ProgramEvaluator TopDef where
+  eval (FnDef _ _ name args block) = do
+    env <- get
+    fEnv <- getFEnv env
+    let fun = TFun args block fEnv
+    modify $ putFunctionTypeValue name fun
+    return None
 
