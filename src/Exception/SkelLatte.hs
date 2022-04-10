@@ -7,7 +7,7 @@
 module Exception.SkelLatte where
 
 import Prelude (($), Either(..), String, (++), Show, show)
-import qualified Syntax.AbsLatte
+import qualified Grammar.AbsLatte
 
 type Err = Either String
 type Result = Err String
