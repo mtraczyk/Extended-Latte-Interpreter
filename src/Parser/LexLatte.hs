@@ -7,7 +7,7 @@
 
 {-# LANGUAGE PatternSynonyms #-}
 
-module LexLatte where
+module Parser.LexLatte where
 
 import Prelude
 
