@@ -33,36 +33,8 @@ instance ProgramRunner Block where
     mapM_ (\stmt -> runCode stmt) stmts
     return None
 
---data Type' a
---    = Int a | Str a | Bool a | Void a | Fun a (Type' a) [Type' a]
-
---type Expr = Expr' BNFC'Position
---data Expr' a
---    = EVar a Ident
---    | ELitInt a Integer
---    | ELitTrue a
---    | ELitFalse a
---    | EApp a Ident [Expr' a]
---    | EString a String
---    | Neg a (Expr' a)
---    | Not a (Expr' a)
---    | EMul a (Expr' a) (MulOp' a) (Expr' a)
---    | EAdd a (Expr' a) (AddOp' a) (Expr' a)
---    | ERel a (Expr' a) (RelOp' a) (Expr' a)
---    | EAnd a (Expr' a) (Expr' a)
---    | EOr a (Expr' a) (Expr' a)
-
---    | Ass a Ident (Expr' a) +
---    | Incr a Ident +
---    | Decr a Ident +
---    | Ret a (Expr' a) +
---    | VRet a +
---    | Cond a (Expr' a) (Stmt' a) +
---    | CondElse a (Expr' a) (Stmt' a) (Stmt' a) +
---    | While a (Expr' a) (Stmt' a)
 --    | Break a
 --    | Continue a
---    | SExp a (Expr' a) +
 
 instance ProgramRunner Stmt where
   runCode (Empty _) = return None
@@ -114,8 +86,6 @@ instance ProgramRunner Stmt where
         return None
       Environment.Environment.Bool False -> return None
 
-    return None
-
   runCode (CondElse _ expr ifStmt elseStmt) = evalBasedOnReturn $ runAndKeepEnv $ do
     x <- runCode expr
     case x of
@@ -126,8 +96,6 @@ instance ProgramRunner Stmt where
         runCode elseStmt
         return None
 
-    return None
-
   runCode while@(While _ expr stmt) = evalBasedOnReturn $ runAndKeepEnv $ do
     x <- runCode expr
     case x of
@@ -136,9 +104,71 @@ instance ProgramRunner Stmt where
         return None
       Environment.Environment.Bool False -> return None
 
-    return None
-
   runCode (SExp _ expr) = evalBasedOnReturn $ runCode expr
 
+
+--    | EApp a Ident [Expr' a]
+
 instance ProgramRunner Expr where
+  runCode (EVar _ ident) = do
+    env <- get
+    return $ getSimpleTypeValue ident env
+
   runCode (ELitInt _ x) = return $ Environment.Environment.Int x
+  runCode (ELitTrue _) = return $ Environment.Environment.Bool True
+  runCode (ELitFalse _) = return $ Environment.Environment.Bool False
+  runCode (EString _ str) = return $ Environment.Environment.Str str
+
+  runCode (EApp _ ident expressions) = do
+    argsVal <- mapM runCode expressions
+    maybeRunBuildinFunction ident argsVal $ do
+      env <- get
+      case getFunctionTypeValue ident env of
+        TFun args block funEnv -> return None
+        TVoid -> return None
+
+  runCode (Neg _ expr) = do
+    x <- runCode expr
+    return $ applyFun negate x
+
+  runCode (Not _ expr) = do
+    x <- runCode expr
+    case x of
+      Environment.Environment.Bool True -> return $ Environment.Environment.Bool False
+      Environment.Environment.Bool False -> return $ Environment.Environment.Bool True
+
+  runCode (EMul _ exprL op exprR) = do
+    (Environment.Environment.Int x) <- runCode exprL
+    (Environment.Environment.Int y) <- runCode exprR
+    case op of
+      Times _ -> return $ Environment.Environment.Int $ x * y
+      Div _ -> return $ Environment.Environment.Int $ x `div` y
+      Mod _ -> return $ Environment.Environment.Int $ x `mod` y
+
+  runCode (EAdd _ exprL op exprR) = do
+    (Environment.Environment.Int x) <- runCode exprL
+    (Environment.Environment.Int y) <- runCode exprR
+    case op of
+      Plus _ -> return $ Environment.Environment.Int $ x + y
+      Minus _ -> return $ Environment.Environment.Int $ x - y
+
+  runCode (EAnd _ exprL exprR) = do
+    (Environment.Environment.Bool x) <- runCode exprL
+    (Environment.Environment.Bool y) <- runCode exprR
+    return $ Environment.Environment.Bool $ x && y
+
+  runCode (EOr _ exprL exprR) = do
+    (Environment.Environment.Bool x) <- runCode exprL
+    (Environment.Environment.Bool y) <- runCode exprR
+    return $ Environment.Environment.Bool $ x || y
+
+  runCode (ERel _ exprL op exprR) = do
+    (Environment.Environment.Bool x) <- runCode exprL
+    (Environment.Environment.Bool y) <- runCode exprR
+    case op of
+      LTH _ -> return $ Environment.Environment.Bool $ x < y
+      LE _ -> return $ Environment.Environment.Bool $ x <= y
+      GTH _ -> return $ Environment.Environment.Bool $ x > y
+      GE _ -> return $ Environment.Environment.Bool $ x >= y
+      EQU _ -> return $ Environment.Environment.Bool $ x == y
+      NE _ -> return $ Environment.Environment.Bool $ x /= y

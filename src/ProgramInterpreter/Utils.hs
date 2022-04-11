@@ -12,12 +12,13 @@ import qualified Data.Map as M
 -- Buildin functions
 buildinFunctions = ["printInt", "printBool", "printString"]
 
-runBuildinFunction :: Ident -> [SimpleType] -> SimpleTypeEvaluator
-runBuildinFunction (Ident name) val = case name `elem` buildinFunctions of
-  True -> do
-    liftIO $ putStrLn (show val)
-    return None
-  False -> throwError $ UndefinedBuildinFunction Nothing
+maybeRunBuildinFunction :: Ident -> [SimpleType] -> SimpleTypeEvaluator -> SimpleTypeEvaluator
+maybeRunBuildinFunction (Ident name) args ste = do
+  case name `elem` buildinFunctions of
+    True -> do
+      liftIO $ putStrLn (show args)
+      return None
+    False -> ste
 
 isReturnDefined :: EvalEnvironment -> Bool
 isReturnDefined env = let loc = getEnvLocation (Ident "return") (getVEnv env) in
