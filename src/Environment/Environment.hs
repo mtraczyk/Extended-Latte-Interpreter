@@ -14,7 +14,7 @@ data EvalEnvironment = EvalEnvironment {vEnv :: Env, fEnv :: Env, store :: Store
 data Store = Store {vStore :: M.Map Location SimpleType,
   fStore :: M.Map Location FunctionType, vAlloc :: Int, fAlloc :: Int}
 
-data SimpleType = Int Integer | Str String | Bool Bool | None deriving (Eq, Show)
+data SimpleType = Int Integer | Str String | Bool Bool | VoidReturn | None deriving (Eq, Show)
 data FunctionType = TFun [Arg] Block Env | TVoid
 
 getFunctionArgs :: FunctionType -> [Arg]
@@ -61,8 +61,14 @@ putEnvLocation ident loc Env{..} = Env {env = M.insert ident loc env}
 getVEnv :: EvalEnvironment -> Env
 getVEnv EvalEnvironment{..} = vEnv
 
+putVEnv :: Env -> EvalEnvironment -> EvalEnvironment
+putVEnv vEnv' EvalEnvironment{..} = EvalEnvironment {vEnv = vEnv', fEnv = fEnv, store = store}
+
 getFEnv :: EvalEnvironment -> Env
 getFEnv EvalEnvironment{..} = fEnv
+
+putFEnv :: Env -> EvalEnvironment -> EvalEnvironment
+putFEnv fEnv' EvalEnvironment{..} = EvalEnvironment {vEnv = vEnv, fEnv = fEnv', store = store}
 
 getVStore :: EvalEnvironment -> (M.Map Location SimpleType)
 getVStore EvalEnvironment{..} = vStore store
@@ -97,6 +103,15 @@ putFunctionTypeValue ident val env = EvalEnvironment {vEnv = vEnv env, fEnv = fE
   where
     (loc', store') = putStoreFunctionType val (store env)
     fEnv' = putEnvLocation ident loc' (fEnv env)
+
+getReturnValue :: EvalEnvironment -> SimpleType
+getReturnValue env = getSimpleTypeValue (Ident "return") env
+
+updateReturnValue :: SimpleType -> EvalEnvironment -> EvalEnvironment
+updateReturnValue val env = updateSimpleTypeValue (Ident "return") val env
+
+putReturnValue :: SimpleType -> EvalEnvironment -> EvalEnvironment
+putReturnValue val env = putSimpleTypeValue (Ident "return") val env
 
 emptyStore = Store {vStore = M.empty, fStore = M.empty, vAlloc = 0, fAlloc = 0}
 emptyEvalEnvironment = EvalEnvironment {vEnv = Env {env = M.empty}, fEnv = Env {env = M.empty}, store = emptyStore}

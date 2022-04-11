@@ -37,3 +37,16 @@ defaultReturnValueForSimpleType :: Type -> Expr
 defaultReturnValueForSimpleType (Grammar.AbsLatte.Int pos) = ELitInt pos 0
 defaultReturnValueForSimpleType (Grammar.AbsLatte.Str pos) = EString pos ""
 defaultReturnValueForSimpleType (Grammar.AbsLatte.Bool pos) = ELitFalse pos
+
+runAndKeepEnv :: SimpleTypeEvaluator -> SimpleTypeEvaluator
+runAndKeepEnv ste = do
+  env <- get
+  let vEnv = getVEnv env
+  let fEnv = getFEnv env
+  ste
+  modify $ putVEnv vEnv
+  modify $ putFEnv fEnv
+  return None
+
+applyFun :: (Integer -> Integer) -> SimpleType -> SimpleType
+applyFun f (Environment.Environment.Int val) = Environment.Environment.Int $ f val

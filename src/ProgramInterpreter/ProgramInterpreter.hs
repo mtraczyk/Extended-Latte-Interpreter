@@ -29,41 +29,10 @@ instance ProgramRunner TopDef where
     return None
 
 instance ProgramRunner Block where
-  runCode (Block _ stmts) = do
---    mapM_ runCode stmts
+  runCode (Block _ stmts) = evalBasedOnReturn $ runAndKeepEnv $ do
+    mapM_ (\stmt -> runCode stmt) stmts
     return None
 
-
---data Stmt' a
---    = Empty a
---    | BStmt a (Block' a)
---    | Decl a (Type' a) [Item' a]
---    | Ass a Ident (Expr' a)
---    | Incr a Ident
---    | Decr a Ident
---    | Ret a (Expr' a)
---    | VRet a
---    | Cond a (Expr' a) (Stmt' a)
---    | CondElse a (Expr' a) (Stmt' a) (Stmt' a)
---    | While a (Expr' a) (Stmt' a)
---    | Break a
---    | Continue a
---    | SExp a (Expr' a)
-
---  runCode (FnDef _ _ name args block) = do
---    env <- get
---    let fEnv = getFEnv env
---    let fun = TFun args block fEnv
---    modify $ putFunctionTypeValue name fun
---    return None
---    data SimpleType = Int Integer | Str String | Bool Bool | None deriving (Eq, Show)
---    data Item' a = NoInit a Ident | Init a Ident (Expr' a)
-
---    putSimpleTypeValue :: Ident -> SimpleType -> EvalEnvironment -> EvalEnvironment
---    putSimpleTypeValue ident val env = EvalEnvironment {vEnv = vEnv', fEnv = fEnv env, store = store'}
---      where
---        (loc', store') = putStoreSimpleType val (store env)
---        vEnv' = putEnvLocation ident loc' (vEnv env)
 --data Type' a
 --    = Int a | Str a | Bool a | Void a | Fun a (Type' a) [Type' a]
 
@@ -83,13 +52,25 @@ instance ProgramRunner Block where
 --    | EAnd a (Expr' a) (Expr' a)
 --    | EOr a (Expr' a) (Expr' a)
 
+--    | Ass a Ident (Expr' a) +
+--    | Incr a Ident +
+--    | Decr a Ident +
+--    | Ret a (Expr' a) +
+--    | VRet a
+--    | Cond a (Expr' a) (Stmt' a)
+--    | CondElse a (Expr' a) (Stmt' a) (Stmt' a)
+--    | While a (Expr' a) (Stmt' a)
+--    | Break a
+--    | Continue a
+--    | SExp a (Expr' a)
+
 instance ProgramRunner Stmt where
   runCode (Empty _) = return None
 
-  runCode (BStmt _ block) = do
-    evalBasedOnReturn $ runCode block
+  runCode (BStmt _ block) =
+    evalBasedOnReturn $ runAndKeepEnv $ runCode block
 
-  runCode (Decl pos sType [(NoInit _ ident)]) = do
+  runCode (Decl pos sType [(NoInit _ ident)]) =
     evalBasedOnReturn $ runCode $ Decl pos sType [(Init pos ident (defaultReturnValueForSimpleType sType))]
 
   runCode (Decl _ sType [(Init _ ident expr)]) = evalBasedOnReturn $ do
@@ -100,6 +81,31 @@ instance ProgramRunner Stmt where
   runCode (Decl pos sType decls) = evalBasedOnReturn $ do
     mapM_ (\decl -> runCode $ Decl pos sType [decl]) decls
     return None
+
+  runCode (Ass _ ident expr) = evalBasedOnReturn $ do
+    x <- runCode expr
+    modify $ updateSimpleTypeValue ident x
+    return None
+
+  runCode (Incr _ ident) = evalBasedOnReturn $ do
+    env <- get
+    modify $ updateSimpleTypeValue ident (applyFun (\x -> x + 1) (getSimpleTypeValue ident env))
+    return None
+
+  runCode (Decr _ ident) = evalBasedOnReturn $ do
+    env <- get
+    modify $ updateSimpleTypeValue ident (applyFun (\x -> x - 1) (getSimpleTypeValue ident env))
+    return None
+
+  runCode (Ret _ expr) = evalBasedOnReturn $ do
+    x <- runCode expr
+    modify $ updateReturnValue x
+    return None
+
+  runCode (VRet _) = evalBasedOnReturn $ do
+    modify $ updateReturnValue VoidReturn
+    return None
+
 
 instance ProgramRunner Expr where
   runCode (ELitInt _ x) = return $ Environment.Environment.Int x
