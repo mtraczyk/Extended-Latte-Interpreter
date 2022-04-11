@@ -56,13 +56,13 @@ instance ProgramRunner Block where
 --    | Incr a Ident +
 --    | Decr a Ident +
 --    | Ret a (Expr' a) +
---    | VRet a
---    | Cond a (Expr' a) (Stmt' a)
---    | CondElse a (Expr' a) (Stmt' a) (Stmt' a)
+--    | VRet a +
+--    | Cond a (Expr' a) (Stmt' a) +
+--    | CondElse a (Expr' a) (Stmt' a) (Stmt' a) +
 --    | While a (Expr' a) (Stmt' a)
 --    | Break a
 --    | Continue a
---    | SExp a (Expr' a)
+--    | SExp a (Expr' a) +
 
 instance ProgramRunner Stmt where
   runCode (Empty _) = return None
@@ -106,6 +106,39 @@ instance ProgramRunner Stmt where
     modify $ updateReturnValue VoidReturn
     return None
 
+  runCode (Cond _ expr stmt) = evalBasedOnReturn $ runAndKeepEnv $ do
+    x <- runCode expr
+    case x of
+      Environment.Environment.Bool True -> do
+        runCode stmt
+        return None
+      Environment.Environment.Bool False -> return None
+
+    return None
+
+  runCode (CondElse _ expr ifStmt elseStmt) = evalBasedOnReturn $ runAndKeepEnv $ do
+    x <- runCode expr
+    case x of
+      Environment.Environment.Bool True -> do
+        runCode ifStmt
+        return None
+      Environment.Environment.Bool False -> do
+        runCode elseStmt
+        return None
+
+    return None
+
+  runCode while@(While _ expr stmt) = evalBasedOnReturn $ runAndKeepEnv $ do
+    x <- runCode expr
+    case x of
+      Environment.Environment.Bool True -> evalBasedOnReturn $ runAndKeepEnv $ do
+        runCode while
+        return None
+      Environment.Environment.Bool False -> return None
+
+    return None
+
+  runCode (SExp _ expr) = evalBasedOnReturn $ runCode expr
 
 instance ProgramRunner Expr where
   runCode (ELitInt _ x) = return $ Environment.Environment.Int x
