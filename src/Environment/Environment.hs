@@ -64,6 +64,12 @@ getVEnv EvalEnvironment{..} = vEnv
 getFEnv :: EvalEnvironment -> Env
 getFEnv EvalEnvironment{..} = fEnv
 
+getVStore :: EvalEnvironment -> (M.Map Location SimpleType)
+getVStore EvalEnvironment{..} = vStore store
+
+getFStore :: EvalEnvironment -> (M.Map Location FunctionType)
+getFStore EvalEnvironment{..} = fStore store
+
 getSimpleTypeValue :: Ident -> EvalEnvironment -> SimpleType
 getSimpleTypeValue ident env = getStoreSimpleType (getEnvLocation ident (getVEnv env)) (store env)
 

@@ -7,6 +7,7 @@ import Prelude
 import Grammar.AbsLatte
 import Control.Monad.Except
 import Control.Monad.State
+import qualified Data.Map as M
 
 -- Buildin functions
 buildinFunctions = ["printInt", "printBool", "printString"]
@@ -17,3 +18,22 @@ runBuildinFunction (Ident name) val = case name `elem` buildinFunctions of
     liftIO $ putStrLn (show val)
     return None
   False -> throwError $ UndefinedBuildinFunction Nothing
+
+isReturnDefined :: EvalEnvironment -> Bool
+isReturnDefined env = let loc = getEnvLocation (Ident "return") (getVEnv env) in
+  case M.lookup loc (getVStore env) of
+    Just None -> False
+    Just _ -> True
+    Nothing -> False
+
+evalBasedOnReturn :: SimpleTypeEvaluator -> SimpleTypeEvaluator
+evalBasedOnReturn ste = do
+  env <- get
+  case isReturnDefined env of
+    True -> ste
+    False -> return None
+
+defaultReturnValueForSimpleType :: Type -> Expr
+defaultReturnValueForSimpleType (Grammar.AbsLatte.Int pos) = ELitInt pos 0
+defaultReturnValueForSimpleType (Grammar.AbsLatte.Str pos) = EString pos ""
+defaultReturnValueForSimpleType (Grammar.AbsLatte.Bool pos) = ELitFalse pos
