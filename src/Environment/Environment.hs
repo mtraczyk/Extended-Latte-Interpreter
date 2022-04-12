@@ -15,16 +15,13 @@ data Store = Store {vStore :: M.Map Location SimpleType,
   fStore :: M.Map Location FunctionType, vAlloc :: Int, fAlloc :: Int}
 
 data SimpleType = Int Integer | Str String | Bool Bool | VoidReturn | None deriving (Eq, Show)
-data FunctionType = TFun [Arg] Block Env | TVoid
+data FunctionType = TFun [Arg] Block Env Env | TVoid
 
 getFunctionArgs :: FunctionType -> [Arg]
-getFunctionArgs (TFun args _ _) = args
+getFunctionArgs (TFun args _ _ _) = args
 
 getFunctionBlock :: FunctionType -> Block
-getFunctionBlock (TFun _ block _) = block
-
-getFunEnv :: FunctionType -> Env
-getFunEnv (TFun _ _ env) = env
+getFunctionBlock (TFun _ block _ _) = block
 
 getStoreSimpleType :: Location -> Store -> SimpleType
 getStoreSimpleType loc Store{..} = fromJust $ M.lookup loc vStore

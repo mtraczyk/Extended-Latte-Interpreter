@@ -17,14 +17,15 @@ interpretProgram program = runExceptT $ evalStateT (runCode program) emptyEvalEn
 instance ProgramRunner Program where
   runCode (Program pos topDefs) = do
     mapM_ runCode topDefs
-    -- eval main function
+    runCode $ EApp pos (Ident "main") []
     return None
 
 instance ProgramRunner TopDef where
   runCode (FnDef _ _ name args block) = do
     env <- get
+    let vEnv = getVEnv env
     let fEnv = getFEnv env
-    let fun = TFun args block fEnv
+    let fun = TFun args block vEnv fEnv
     modify $ putFunctionTypeValue name fun
     return None
 
@@ -123,9 +124,18 @@ instance ProgramRunner Expr where
     argsVal <- mapM runCode expressions
     maybeRunBuildinFunction ident argsVal $ do
       env <- get
-      case getFunctionTypeValue ident env of
-        TFun args block funEnv -> return None
-        TVoid -> return None
+      let fun@(TFun args block funVEnv funFEnv) = getFunctionTypeValue ident env
+      modify $ putVEnv funVEnv
+      modify $ putFEnv funFEnv
+      modify $ putFunctionTypeValue ident fun
+      modify $ putReturnValue VoidReturn
+      modify (\environment -> (foldl (\acc ((Arg _ _ x), y) -> putSimpleTypeValue x y acc) environment (zip args argsVal)))
+      runCode block
+      funEnv' <- get
+      let returnValue = getReturnValue funEnv'
+      modify $ putVEnv (getVEnv env)
+      modify $ putFEnv (getFEnv env)
+      return returnValue
 
   runCode (Neg _ expr) = do
     x <- runCode expr
@@ -142,8 +152,14 @@ instance ProgramRunner Expr where
     (Environment.Environment.Int y) <- runCode exprR
     case op of
       Times _ -> return $ Environment.Environment.Int $ x * y
-      Div _ -> return $ Environment.Environment.Int $ x `div` y
-      Mod _ -> return $ Environment.Environment.Int $ x `mod` y
+      Div pos -> do
+        case y of
+          0 ->  throwError $ DivideByZeroException pos
+          _ ->  return $ Environment.Environment.Int $ x `div` y
+      Mod pos ->
+        case y of
+          0 -> throwError $ DivideByZeroException pos
+          _ -> return $ Environment.Environment.Int $ x `mod` y
 
   runCode (EAdd _ exprL op exprR) = do
     (Environment.Environment.Int x) <- runCode exprL
