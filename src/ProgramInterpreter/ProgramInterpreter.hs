@@ -36,7 +36,6 @@ instance ProgramRunner Block where
 
 --    | Break a
 --    | Continue a
-
 instance ProgramRunner Stmt where
   runCode (Empty _) = return None
 
@@ -73,6 +72,8 @@ instance ProgramRunner Stmt where
   runCode (Ret _ expr) = evalBasedOnReturn $ do
     x <- runCode expr
     modify $ updateReturnValue x
+    env <- get
+    liftIO $ putStrLn $ show (getReturnValue env)
     return None
 
   runCode (VRet _) = evalBasedOnReturn $ do
@@ -107,9 +108,6 @@ instance ProgramRunner Stmt where
 
   runCode (SExp _ expr) = evalBasedOnReturn $ runCode expr
 
-
---    | EApp a Ident [Expr' a]
-
 instance ProgramRunner Expr where
   runCode (EVar _ ident) = do
     env <- get
@@ -128,13 +126,15 @@ instance ProgramRunner Expr where
       modify $ putVEnv funVEnv
       modify $ putFEnv funFEnv
       modify $ putFunctionTypeValue ident fun
-      modify $ putReturnValue VoidReturn
+      modify $ putReturnValue None
       modify (\environment -> (foldl (\acc ((Arg _ _ x), y) -> putSimpleTypeValue x y acc) environment (zip args argsVal)))
       runCode block
       funEnv' <- get
       let returnValue = getReturnValue funEnv'
       modify $ putVEnv (getVEnv env)
       modify $ putFEnv (getFEnv env)
+      liftIO $ putStrLn "!!"
+      liftIO $ putStrLn $ show returnValue
       return returnValue
 
   runCode (Neg _ expr) = do
