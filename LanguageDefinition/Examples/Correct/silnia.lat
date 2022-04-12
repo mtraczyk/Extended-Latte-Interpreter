@@ -1,9 +1,3 @@
-int main () {
-  printInt(fact(7)) ;
-  printInt(factr(7)) ;
-  return 0 ;
-}
-
 // iteracyjnie
 int fact (int n) {
   int i,r ;
@@ -22,4 +16,10 @@ int factr (int n) {
     return 1 ;
   else
     return (n * factr(n-1)) ;
+}
+
+int main () {
+  printInt(fact(7)) ;
+  printInt(factr(7)) ;
+  return 0 ;
 }
