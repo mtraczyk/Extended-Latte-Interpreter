@@ -100,6 +100,7 @@ instance ProgramRunner Stmt where
     x <- runCode expr
     case x of
       Environment.Environment.Bool True -> evalBasedOnReturn $ runAndKeepEnv $ do
+        runCode stmt
         runCode while
         return None
       Environment.Environment.Bool False -> return None
@@ -175,8 +176,8 @@ instance ProgramRunner Expr where
     return $ Environment.Environment.Bool $ x || y
 
   runCode (ERel _ exprL op exprR) = do
-    (Environment.Environment.Bool x) <- runCode exprL
-    (Environment.Environment.Bool y) <- runCode exprR
+    (Environment.Environment.Int x) <- runCode exprL
+    (Environment.Environment.Int y) <- runCode exprR
     case op of
       LTH _ -> return $ Environment.Environment.Bool $ x < y
       LE _ -> return $ Environment.Environment.Bool $ x <= y
