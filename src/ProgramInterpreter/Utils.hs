@@ -31,8 +31,8 @@ evalBasedOnReturn :: SimpleTypeEvaluator -> SimpleTypeEvaluator
 evalBasedOnReturn ste = do
   env <- get
   case isReturnDefined env of
-    True -> ste
-    False -> return None
+    True -> return None
+    False -> ste
 
 defaultReturnValueForSimpleType :: Type -> Expr
 defaultReturnValueForSimpleType (Grammar.AbsLatte.Int pos) = ELitInt pos 0

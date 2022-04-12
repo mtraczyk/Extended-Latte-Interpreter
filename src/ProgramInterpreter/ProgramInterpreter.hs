@@ -17,8 +17,8 @@ interpretProgram program = runExceptT $ evalStateT (runCode program) emptyEvalEn
 instance ProgramRunner Program where
   runCode (Program pos topDefs) = do
     mapM_ runCode topDefs
-    runCode $ EApp pos (Ident "main") []
-    return None
+    retValue <- runCode $ EApp pos (Ident "main") []
+    return retValue
 
 instance ProgramRunner TopDef where
   runCode (FnDef _ _ name args block) = do
@@ -72,8 +72,6 @@ instance ProgramRunner Stmt where
   runCode (Ret _ expr) = evalBasedOnReturn $ do
     x <- runCode expr
     modify $ updateReturnValue x
-    env <- get
-    liftIO $ putStrLn $ show (getReturnValue env)
     return None
 
   runCode (VRet _) = evalBasedOnReturn $ do
@@ -133,8 +131,6 @@ instance ProgramRunner Expr where
       let returnValue = getReturnValue funEnv'
       modify $ putVEnv (getVEnv env)
       modify $ putFEnv (getFEnv env)
-      liftIO $ putStrLn "!!"
-      liftIO $ putStrLn $ show returnValue
       return returnValue
 
   runCode (Neg _ expr) = do
