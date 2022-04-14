@@ -16,6 +16,7 @@ interpretProgram program = runExceptT $ evalStateT (runCode program) emptyEvalEn
 
 instance ProgramRunner Program where
   runCode (Program pos topDefs) = do
+    modify $ putReturnValue None
     mapM_ runCode topDefs
     retValue <- runCode $ EApp pos (Ident "main") []
     return retValue
@@ -27,6 +28,10 @@ instance ProgramRunner TopDef where
     let fEnv = getFEnv env
     let fun = TFun args block vEnv fEnv
     modify $ putFunctionTypeValue name fun
+    return None
+
+  runCode (GloDecl pos sType decls) = do
+    runCode $ Decl pos sType decls
     return None
 
 instance ProgramRunner Block where

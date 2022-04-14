@@ -6,6 +6,8 @@ Program.   Program ::= [TopDef] ;
 
 FnDef.	   TopDef ::= Type Ident "(" [Arg] ")" Block ;
 
+GloDecl.   TopDef ::= Type [Item] ";" ;
+
 separator nonempty TopDef "" ;
 
 Arg. 	   Arg ::= Type Ident;
@@ -24,7 +26,7 @@ BStmt.     Stmt ::= Block ;
 
 Decl.      Stmt ::= Type [Item] ";" ;
 
-NoInit.    Item ::= Ident ; 
+NoInit.    Item ::= Ident ;
 
 Init.      Item ::= Ident "=" Expr ;
 
@@ -131,4 +133,3 @@ comment    "#" ;
 comment    "//" ;
 
 comment    "/*" "*/" ;
-

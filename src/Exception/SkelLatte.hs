@@ -26,6 +26,7 @@ transProgram x = case x of
 transTopDef :: Show a => Grammar.AbsLatte.TopDef' a -> Result
 transTopDef x = case x of
   Grammar.AbsLatte.FnDef _ type_ ident args block -> failure x
+  Grammar.AbsLatte.GloDecl _ type_ items -> failure x
 
 transArg :: Show a => Grammar.AbsLatte.Arg' a -> Result
 transArg x = case x of
