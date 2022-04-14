@@ -49,6 +49,7 @@ data Stmt' a
     | While a (Expr' a) (Stmt' a)
     | Break a
     | Continue a
+    | STopDef a (TopDef' a)
     | SExp a (Expr' a)
   deriving (C.Eq, C.Ord, C.Show, C.Read, C.Functor, C.Foldable, C.Traversable)
 
@@ -139,6 +140,7 @@ instance HasPosition Stmt where
     While p _ _ -> p
     Break p -> p
     Continue p -> p
+    STopDef p _ -> p
     SExp p _ -> p
 
 instance HasPosition Item where

@@ -21,5 +21,8 @@ int factr (int n) {
 int main () {
   printInt(fact(7)) ;
   printInt(factr(7)) ;
+  int k = 8;
+  printInt(factr(k));
+
   return 0 ;
 }

@@ -105,6 +105,10 @@ instance ProgramRunner Stmt where
         return None
       Environment.Environment.Bool False -> return None
 
+  runCode (STopDef _ def) = evalBasedOnReturn $ do
+    runCode def
+    return None
+
   runCode (SExp _ expr) = evalBasedOnReturn $ runCode expr
 
 instance ProgramRunner Expr where

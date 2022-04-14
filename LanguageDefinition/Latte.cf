@@ -50,6 +50,8 @@ Break.     Stmt ::= "break" ";" ;
 
 Continue.  Stmt ::= "continue" ";" ;
 
+STopDef.   Stmt ::= TopDef ;
+
 SExp.      Stmt ::= Expr  ";" ;
 
 -- Types ---------------------------------------------------

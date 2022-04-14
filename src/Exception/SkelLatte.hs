@@ -48,6 +48,9 @@ transStmt x = case x of
   Grammar.AbsLatte.Cond _ expr stmt -> failure x
   Grammar.AbsLatte.CondElse _ expr stmt1 stmt2 -> failure x
   Grammar.AbsLatte.While _ expr stmt -> failure x
+  Grammar.AbsLatte.Break _ -> failure x
+  Grammar.AbsLatte.Continue _ -> failure x
+  Grammar.AbsLatte.STopDef _ topdef -> failure x
   Grammar.AbsLatte.SExp _ expr -> failure x
 
 transItem :: Show a => Grammar.AbsLatte.Item' a -> Result
