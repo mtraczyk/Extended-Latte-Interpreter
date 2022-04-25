@@ -98,6 +98,8 @@ EAnd.      Expr1 ::= Expr2 "&&" Expr1 ;
 
 EOr.       Expr ::= Expr1 "||" Expr ;
 
+ELambda.   Expr ::= Type "lambda" "(" [Arg] ")" Block ;
+
 coercions  Expr 6 ;
 
 separator  Expr "," ;

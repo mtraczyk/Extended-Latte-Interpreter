@@ -15,5 +15,7 @@ int main () {
 
   fun = fact;
 
+  printInt(fun(10));
+
   return 0 ;
 }

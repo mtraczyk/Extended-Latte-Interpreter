@@ -6,18 +6,18 @@ T  04 (print)
 T  05 (while, if)
 T  06 (funkcje lub procedury, rekurencja)
 T  07 (przez zmienną / przez wartość / in/out)
-T  08 (zmienne read-only i pętla for)
+   08 (zmienne read-only i pętla for)
   Na 20 punktów
 T  09 (przesłanianie i statyczne wiązanie)
 T  10 (obsługa błędów wykonania)
 T  11 (funkcje zwracające wartość)
   Na 30 punktów
-T  12 (4) (statyczne typowanie)
+   12 (4) (statyczne typowanie)
 T  13 (2) (funkcje zagnieżdżone ze statycznym wiązaniem)
   14 (1/2) (rekordy/listy/tablice/tablice wielowymiarowe)
   15 (2) (krotki z przypisaniem)
-T  16 (1) (break, continue)
-  17 (4) (funkcje wyższego rzędu, anonimowe, domknięcia)
+  16 (1) (break, continue)
+T  17 (4) (funkcje wyższego rzędu, anonimowe, domknięcia)
   18 (3) (generatory)
 
-Razem: 27
+Razem: 26

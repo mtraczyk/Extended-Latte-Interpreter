@@ -18,8 +18,12 @@ instance ProgramRunner Program where
   runCode (Program pos topDefs) = do
     modify $ putReturnValue None
     mapM_ runCode topDefs
-    retValue <- runCode $ EApp pos (Ident "main") []
-    return retValue
+    env <- get
+    case isDefinedFunctionTypeValue (Ident "main") env of
+      True -> do
+        retValue <- runCode $ EApp pos (Ident "main") []
+        return retValue
+      False -> throwError $ MainFunctionUndefinedError pos
 
 instance ProgramRunner TopDef where
   runCode (FnDef _ _ name args block) = do
@@ -39,8 +43,6 @@ instance ProgramRunner Block where
     mapM_ (\stmt -> runCode stmt) stmts
     return $ Left None
 
---    | Break a
---    | Continue a
 instance ProgramRunner Stmt where
   runCode (Empty _) = return $ Left None
 
@@ -159,6 +161,10 @@ instance ProgramRunner Expr where
       putTypeValue x y acc = case y of
         Left val -> putSimpleTypeValue x val acc
         Right val -> putFunctionTypeValue x val acc
+
+  runCode (ELambda _ _ arguments block) = do
+    env <- get
+    return $ Right $ TFun arguments block (getVEnv env) (getFEnv env)
 
   runCode (Neg pos expr) = do
     x <- runCode expr

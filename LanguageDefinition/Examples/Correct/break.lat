@@ -1,8 +1,0 @@
-int main () {
-  while (true) {
-    break;
-  }
-  break;
-
-  return 0 ;
-}

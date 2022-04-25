@@ -82,6 +82,7 @@ transExpr x = case x of
   Grammar.AbsLatte.ERel _ expr1 relop expr2 -> failure x
   Grammar.AbsLatte.EAnd _ expr1 expr2 -> failure x
   Grammar.AbsLatte.EOr _ expr1 expr2 -> failure x
+  Grammar.AbsLatte.ELambda _ type_ args block -> failure x
 
 transAddOp :: Show a => Grammar.AbsLatte.AddOp' a -> Result
 transAddOp x = case x of

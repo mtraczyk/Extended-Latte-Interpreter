@@ -1,0 +1,12 @@
+int main () {
+  int fun (int n) {}
+
+  fun = string lambda(string message) {
+     printString(message);
+     };
+
+  fun("Hello World!");
+  fun("And you all!");
+
+  return 0;
+}
