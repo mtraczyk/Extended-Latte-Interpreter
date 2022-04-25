@@ -14,8 +14,8 @@ data EvalEnvironment = EvalEnvironment {vEnv :: Env, fEnv :: Env, store :: Store
 data Store = Store {vStore :: M.Map Location SimpleType,
   fStore :: M.Map Location FunctionType, vAlloc :: Int, fAlloc :: Int} deriving (Eq, Show)
 
-data SimpleType = Int Integer | Str String | Bool Bool | VoidReturn | None deriving (Eq, Show)
 data FunctionType = TFun [Arg] Block Env Env deriving (Eq, Show)
+data SimpleType = Int Integer | Str String | Bool Bool | VoidReturn | None deriving (Eq, Show)
 
 getStoreSimpleType :: Location -> Store -> SimpleType
 getStoreSimpleType loc Store{..} = fromJust $ M.lookup loc vStore
@@ -67,6 +67,11 @@ getVStore EvalEnvironment{..} = vStore store
 getFStore :: EvalEnvironment -> (M.Map Location FunctionType)
 getFStore EvalEnvironment{..} = fStore store
 
+isDefinedSimpleTypeValue :: Ident -> EvalEnvironment -> Bool
+isDefinedSimpleTypeValue ident EvalEnvironment{..} = case M.lookup ident (env vEnv) of
+  Just _ -> True
+  Nothing -> False
+
 getSimpleTypeValue :: Ident -> EvalEnvironment -> SimpleType
 getSimpleTypeValue ident env = getStoreSimpleType (getEnvLocation ident (getVEnv env)) (store env)
 
@@ -80,6 +85,11 @@ putSimpleTypeValue ident val env = EvalEnvironment {vEnv = vEnv', fEnv = fEnv en
   where
     (loc', store') = putStoreSimpleType val (store env)
     vEnv' = putEnvLocation ident loc' (vEnv env)
+
+isDefinedFunctionTypeValue :: Ident -> EvalEnvironment -> Bool
+isDefinedFunctionTypeValue ident EvalEnvironment{..} = case M.lookup ident (env fEnv) of
+  Just _ -> True
+  Nothing -> False
 
 getFunctionTypeValue :: Ident -> EvalEnvironment -> FunctionType
 getFunctionTypeValue ident env = getStoreFunctionType (getEnvLocation ident (getFEnv env)) (store env)

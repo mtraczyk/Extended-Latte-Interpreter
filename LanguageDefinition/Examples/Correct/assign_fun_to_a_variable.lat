@@ -1,0 +1,19 @@
+int main () {
+  int fact (int n) {
+    int i,r ;
+    i = 1 ;
+    r = 1 ;
+    while (i < n+1) {
+      r = r * i ;
+      i++ ;
+    }
+
+    return r ;
+  }
+
+  int fun (int n) {}
+
+  fun = fact;
+
+  return 0 ;
+}

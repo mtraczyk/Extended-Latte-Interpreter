@@ -4,13 +4,16 @@ module Exception.RuntimeException where
 import Grammar.AbsLatte
 
 type RuntimeException = RuntimeException' BNFC'Position
-data RuntimeException' a = UndefinedException a | DivideByZeroException a | UndefinedBuildinFunction a
+data RuntimeException' a = UndefinedException a | DivideByZeroException a
+  | UndefinedVariable a | UndefinedIdent a
 
 instance Show RuntimeException where
   show (UndefinedException pos) =
     "RUNTIME EXCEPTION: Undefined exception! At " ++ showPos pos
-  show (UndefinedBuildinFunction pos) =
-    "RUNTIME EXCEPTION: Undefined buildin function! At " ++ showPos pos
+  show (UndefinedVariable pos) =
+    "RUNTIME EXCEPTION: Undefined variable! At " ++ showPos pos
+  show (UndefinedIdent pos) =
+    "RUNTIME EXCEPTION: Undefined identifier! At " ++ showPos pos
   show (DivideByZeroException pos) =
     "RUNTIME EXCEPTION: Divide by zero! At " ++ showPos pos
 
