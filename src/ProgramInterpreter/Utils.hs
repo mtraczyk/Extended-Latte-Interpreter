@@ -12,12 +12,12 @@ import qualified Data.Map as M
 -- Buildin functions
 buildinFunctions = ["printInt", "printBool", "printString"]
 
-maybeRunBuildinFunction :: Ident -> [SimpleType] -> SimpleTypeEvaluator -> SimpleTypeEvaluator
+maybeRunBuildinFunction :: Ident -> [Either SimpleType FunctionType] -> ProgramEvaluator -> ProgramEvaluator
 maybeRunBuildinFunction (Ident name) args ste = do
   case name `elem` buildinFunctions of
     True -> do
       liftIO $ putStrLn (show args)
-      return None
+      return $ Left None
     False -> ste
 
 isReturnDefined :: EvalEnvironment -> Bool
@@ -27,11 +27,11 @@ isReturnDefined env = let loc = getEnvLocation (Ident "return") (getVEnv env) in
     Just _ -> True
     Nothing -> False
 
-evalBasedOnReturn :: SimpleTypeEvaluator -> SimpleTypeEvaluator
+evalBasedOnReturn :: ProgramEvaluator -> ProgramEvaluator
 evalBasedOnReturn ste = do
   env <- get
   case isReturnDefined env of
-    True -> return None
+    True -> return $ Left None
     False -> ste
 
 defaultReturnValueForSimpleType :: Type -> Expr
@@ -39,7 +39,7 @@ defaultReturnValueForSimpleType (Grammar.AbsLatte.Int pos) = ELitInt pos 0
 defaultReturnValueForSimpleType (Grammar.AbsLatte.Str pos) = EString pos ""
 defaultReturnValueForSimpleType (Grammar.AbsLatte.Bool pos) = ELitFalse pos
 
-runAndKeepEnv :: SimpleTypeEvaluator -> SimpleTypeEvaluator
+runAndKeepEnv :: ProgramEvaluator -> ProgramEvaluator
 runAndKeepEnv ste = do
   env <- get
   let vEnv = getVEnv env
@@ -47,7 +47,7 @@ runAndKeepEnv ste = do
   ste
   modify $ putVEnv vEnv
   modify $ putFEnv fEnv
-  return None
+  return $ Left None
 
 applyFun :: (Integer -> Integer) -> SimpleType -> SimpleType
 applyFun f (Environment.Environment.Int val) = Environment.Environment.Int $ f val

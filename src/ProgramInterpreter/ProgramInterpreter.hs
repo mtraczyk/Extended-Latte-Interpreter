@@ -11,7 +11,7 @@ import Grammar.AbsLatte
 import Control.Monad.Except
 import Control.Monad.State
 
-interpretProgram :: Program -> IO (Either RuntimeException SimpleType)
+interpretProgram :: Program -> IO (Either RuntimeException (Either SimpleType FunctionType))
 interpretProgram program = runExceptT $ evalStateT (runCode program) emptyEvalEnvironment
 
 instance ProgramRunner Program where
@@ -28,21 +28,21 @@ instance ProgramRunner TopDef where
     let fEnv = getFEnv env
     let fun = TFun args block vEnv fEnv
     modify $ putFunctionTypeValue name fun
-    return None
+    return $ Left None
 
   runCode (GloDecl pos sType decls) = do
     runCode $ Decl pos sType decls
-    return None
+    return $ Left None
 
 instance ProgramRunner Block where
   runCode (Block _ stmts) = evalBasedOnReturn $ runAndKeepEnv $ do
     mapM_ (\stmt -> runCode stmt) stmts
-    return None
+    return $ Left None
 
 --    | Break a
 --    | Continue a
 instance ProgramRunner Stmt where
-  runCode (Empty _) = return None
+  runCode (Empty _) = return $ Left None
 
   runCode (BStmt _ block) =
     evalBasedOnReturn $ runAndKeepEnv $ runCode block
@@ -52,79 +52,92 @@ instance ProgramRunner Stmt where
 
   runCode (Decl _ sType [(Init _ ident expr)]) = evalBasedOnReturn $ do
     x <- runCode expr
-    modify $ putSimpleTypeValue ident x
-    return None
+    case x of
+      Left val -> modify $ putSimpleTypeValue ident val
+      Right val -> modify $ putFunctionTypeValue ident val
+    return $ Left None
 
   runCode (Decl pos sType decls) = evalBasedOnReturn $ do
     mapM_ (\decl -> runCode $ Decl pos sType [decl]) decls
-    return None
+    return $ Left None
 
   runCode (Ass _ ident expr) = evalBasedOnReturn $ do
     x <- runCode expr
-    modify $ updateSimpleTypeValue ident x
-    return None
+    case x of
+      Left val -> modify $ updateSimpleTypeValue ident val
+      Right val -> modify $ updateFunctionTypeValue ident val
+    return $ Left None
 
   runCode (Incr _ ident) = evalBasedOnReturn $ do
     env <- get
     modify $ updateSimpleTypeValue ident (applyFun (\x -> x + 1) (getSimpleTypeValue ident env))
-    return None
+    return $ Left None
 
   runCode (Decr _ ident) = evalBasedOnReturn $ do
     env <- get
     modify $ updateSimpleTypeValue ident (applyFun (\x -> x - 1) (getSimpleTypeValue ident env))
-    return None
+    return $ Left None
 
-  runCode (Ret _ expr) = evalBasedOnReturn $ do
+  runCode (Ret pos expr) = evalBasedOnReturn $ do
     x <- runCode expr
-    modify $ updateReturnValue x
-    return None
+    case x of
+      Left val -> modify $ updateReturnValue val
+      Right _ -> throwError $ WrongReturnTypeError pos
+    return $ Left None
 
   runCode (VRet _) = evalBasedOnReturn $ do
     modify $ updateReturnValue VoidReturn
-    return None
+    return $ Left None
 
-  runCode (Cond _ expr stmt) = evalBasedOnReturn $ runAndKeepEnv $ do
+  runCode (Cond pos expr stmt) = evalBasedOnReturn $ runAndKeepEnv $ do
     x <- runCode expr
     case x of
-      Environment.Environment.Bool True -> do
+      Left (Environment.Environment.Bool True) -> do
         runCode stmt
-        return None
-      Environment.Environment.Bool False -> return None
+        return $ Left None
+      Left (Environment.Environment.Bool False) -> return $ Left None
+      Right _ -> throwError $ WrongTypeError pos
 
-  runCode (CondElse _ expr ifStmt elseStmt) = evalBasedOnReturn $ runAndKeepEnv $ do
+  runCode (CondElse pos expr ifStmt elseStmt) = evalBasedOnReturn $ runAndKeepEnv $ do
     x <- runCode expr
     case x of
-      Environment.Environment.Bool True -> do
+      Left (Environment.Environment.Bool True) -> do
         runCode ifStmt
-        return None
-      Environment.Environment.Bool False -> do
+        return $ Left None
+      Left (Environment.Environment.Bool False) -> do
         runCode elseStmt
-        return None
+        return $ Left None
+      Right _ -> throwError $ WrongTypeError pos
 
-  runCode while@(While _ expr stmt) = evalBasedOnReturn $ runAndKeepEnv $ do
+  runCode while@(While pos expr stmt) = evalBasedOnReturn $ runAndKeepEnv $ do
     x <- runCode expr
     case x of
-      Environment.Environment.Bool True -> evalBasedOnReturn $ runAndKeepEnv $ do
+      Left (Environment.Environment.Bool True) -> evalBasedOnReturn $ runAndKeepEnv $ do
         runCode stmt
         runCode while
-        return None
-      Environment.Environment.Bool False -> return None
+        return $ Left None
+      Left (Environment.Environment.Bool False) -> return $ Left None
+      Right _ -> throwError $ WrongTypeError pos
 
   runCode (STopDef _ def) = evalBasedOnReturn $ do
     runCode def
-    return None
+    return $ Left None
 
   runCode (SExp _ expr) = evalBasedOnReturn $ runCode expr
 
 instance ProgramRunner Expr where
-  runCode (EVar _ ident) = do
+  runCode (EVar pos ident) = do
     env <- get
-    return $ getSimpleTypeValue ident env
+    case isDefinedSimpleTypeValue ident env of
+      True -> return $ Left $ getSimpleTypeValue ident env
+      False -> case isDefinedFunctionTypeValue ident env of
+        True -> return $ Right $ getFunctionTypeValue ident env
+        False -> throwError $ UndefinedIdent pos
 
-  runCode (ELitInt _ x) = return $ Environment.Environment.Int x
-  runCode (ELitTrue _) = return $ Environment.Environment.Bool True
-  runCode (ELitFalse _) = return $ Environment.Environment.Bool False
-  runCode (EString _ str) = return $ Environment.Environment.Str str
+  runCode (ELitInt _ x) = return $ Left $ Environment.Environment.Int x
+  runCode (ELitTrue _) = return $ Left $ Environment.Environment.Bool True
+  runCode (ELitFalse _) = return $ Left $ Environment.Environment.Bool False
+  runCode (EString _ str) = return $ Left $ Environment.Environment.Str str
 
   runCode (EApp _ ident expressions) = do
     argsVal <- mapM runCode expressions
@@ -135,62 +148,69 @@ instance ProgramRunner Expr where
       modify $ putFEnv funFEnv
       modify $ putFunctionTypeValue ident fun
       modify $ putReturnValue None
-      modify (\environment -> (foldl (\acc ((Arg _ _ x), y) -> putSimpleTypeValue x y acc) environment (zip args argsVal)))
+      modify (\environment -> (foldl (\acc ((Arg _ _ x), y) -> putTypeValue x y acc) environment (zip args argsVal)))
       runCode block
       funEnv' <- get
       let returnValue = getReturnValue funEnv'
       modify $ putVEnv (getVEnv env)
       modify $ putFEnv (getFEnv env)
-      return returnValue
+      return $ Left returnValue
+    where
+      putTypeValue x y acc = case y of
+        Left val -> putSimpleTypeValue x val acc
+        Right val -> putFunctionTypeValue x val acc
 
-  runCode (Neg _ expr) = do
-    x <- runCode expr
-    return $ applyFun negate x
-
-  runCode (Not _ expr) = do
+  runCode (Neg pos expr) = do
     x <- runCode expr
     case x of
-      Environment.Environment.Bool True -> return $ Environment.Environment.Bool False
-      Environment.Environment.Bool False -> return $ Environment.Environment.Bool True
+      Left val -> return $ Left $ applyFun negate val
+      Right _ -> throwError $ WrongTypeError pos
 
-  runCode (EMul _ exprL op exprR) = do
-    (Environment.Environment.Int x) <- runCode exprL
-    (Environment.Environment.Int y) <- runCode exprR
+  runCode (Not pos expr) = do
+    x <- runCode expr
+    case x of
+      Left (Environment.Environment.Bool True) -> return $ Left $ Environment.Environment.Bool False
+      Left (Environment.Environment.Bool False) -> return $ Left $ Environment.Environment.Bool True
+      Right _ -> throwError $ WrongTypeError pos
+
+  runCode (EMul pos exprL op exprR) = do
+    Left (Environment.Environment.Int x) <- runCode exprL
+    Left (Environment.Environment.Int y) <- runCode exprR
     case op of
-      Times _ -> return $ Environment.Environment.Int $ x * y
+      Times _ -> return $ Left $ Environment.Environment.Int $ x * y
       Div pos -> do
         case y of
           0 ->  throwError $ DivideByZeroException pos
-          _ ->  return $ Environment.Environment.Int $ x `div` y
+          _ ->  return $ Left $ Environment.Environment.Int $ x `div` y
       Mod pos ->
         case y of
           0 -> throwError $ DivideByZeroException pos
-          _ -> return $ Environment.Environment.Int $ x `mod` y
+          _ -> return $ Left $ Environment.Environment.Int $ x `mod` y
 
   runCode (EAdd _ exprL op exprR) = do
-    (Environment.Environment.Int x) <- runCode exprL
-    (Environment.Environment.Int y) <- runCode exprR
+    Left (Environment.Environment.Int x) <- runCode exprL
+    Left (Environment.Environment.Int y) <- runCode exprR
     case op of
-      Plus _ -> return $ Environment.Environment.Int $ x + y
-      Minus _ -> return $ Environment.Environment.Int $ x - y
+      Plus _ -> return $ Left $ Environment.Environment.Int $ x + y
+      Minus _ -> return $ Left $ Environment.Environment.Int $ x - y
 
   runCode (EAnd _ exprL exprR) = do
-    (Environment.Environment.Bool x) <- runCode exprL
-    (Environment.Environment.Bool y) <- runCode exprR
-    return $ Environment.Environment.Bool $ x && y
+    Left (Environment.Environment.Bool x) <- runCode exprL
+    Left (Environment.Environment.Bool y) <- runCode exprR
+    return $ Left $ Environment.Environment.Bool $ x && y
 
   runCode (EOr _ exprL exprR) = do
-    (Environment.Environment.Bool x) <- runCode exprL
-    (Environment.Environment.Bool y) <- runCode exprR
-    return $ Environment.Environment.Bool $ x || y
+    Left (Environment.Environment.Bool x) <- runCode exprL
+    Left (Environment.Environment.Bool y) <- runCode exprR
+    return $ Left $ Environment.Environment.Bool $ x || y
 
   runCode (ERel _ exprL op exprR) = do
-    (Environment.Environment.Int x) <- runCode exprL
-    (Environment.Environment.Int y) <- runCode exprR
+    Left (Environment.Environment.Int x) <- runCode exprL
+    Left (Environment.Environment.Int y) <- runCode exprR
     case op of
-      LTH _ -> return $ Environment.Environment.Bool $ x < y
-      LE _ -> return $ Environment.Environment.Bool $ x <= y
-      GTH _ -> return $ Environment.Environment.Bool $ x > y
-      GE _ -> return $ Environment.Environment.Bool $ x >= y
-      EQU _ -> return $ Environment.Environment.Bool $ x == y
-      NE _ -> return $ Environment.Environment.Bool $ x /= y
+      LTH _ -> return $ Left $ Environment.Environment.Bool $ x < y
+      LE _ -> return $ Left $ Environment.Environment.Bool $ x <= y
+      GTH _ -> return $ Left $ Environment.Environment.Bool $ x > y
+      GE _ -> return $ Left $ Environment.Environment.Bool $ x >= y
+      EQU _ -> return $ Left $ Environment.Environment.Bool $ x == y
+      NE _ -> return $ Left $ Environment.Environment.Bool $ x /= y
