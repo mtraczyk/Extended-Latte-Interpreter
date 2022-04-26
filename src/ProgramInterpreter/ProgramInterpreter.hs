@@ -84,10 +84,11 @@ instance ProgramRunner Stmt where
       modify $ updateSimpleTypeValue ident (applyFun (\x -> x + 1) (getSimpleTypeValue ident env))
       return $ Left None
 
-  runCode (Decr _ ident) = evalBasedOnReturn $ do
+  runCode (Decr pos ident) = evalBasedOnReturn $ do
     env <- get
-    modify $ updateSimpleTypeValue ident (applyFun (\x -> x - 1) (getSimpleTypeValue ident env))
-    return $ Left None
+    evalBasedOnDefinedSimpleTypeValue ident env pos $ do
+      modify $ updateSimpleTypeValue ident (applyFun (\x -> x - 1) (getSimpleTypeValue ident env))
+      return $ Left None
 
   runCode (Ret pos expr) = evalBasedOnReturn $ do
     x <- runCode expr
@@ -141,9 +142,8 @@ instance ProgramRunner Expr where
     env <- get
     case isDefinedSimpleTypeValue ident env of
       True -> return $ Left $ getSimpleTypeValue ident env
-      False -> case isDefinedFunctionTypeValue ident env of
-        True -> return $ Right $ getFunctionTypeValue ident env
-        False -> throwError $ UndefinedIdentException pos
+      False -> evalBasedOnDefinedFunctionTypeValue ident env pos $
+        return $ Right $ getFunctionTypeValue ident env
 
   runCode (ELitInt _ x) = return $ Left $ Environment.Environment.Int x
   runCode (ELitTrue _) = return $ Left $ Environment.Environment.Bool True
