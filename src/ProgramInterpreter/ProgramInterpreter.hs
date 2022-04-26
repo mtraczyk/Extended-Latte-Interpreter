@@ -23,15 +23,17 @@ instance ProgramRunner Program where
       True -> do
         retValue <- runCode $ EApp pos (Ident "main") []
         return retValue
-      False -> throwError $ MainFunctionUndefinedError pos
+      False -> throwError $ MainFunctionUndefinedException pos
 
 instance ProgramRunner TopDef where
-  runCode (FnDef _ _ name args block) = do
+  runCode (FnDef pos _ name args block) = do
     env <- get
     let vEnv = getVEnv env
     let fEnv = getFEnv env
     let fun = TFun args block vEnv fEnv
-    modify $ putFunctionTypeValue name fun
+    case isNameQualified name of
+      True -> modify $ putFunctionTypeValue name fun
+      False -> throwError $ UnqualifiedIdException pos
     return $ Left None
 
   runCode (GloDecl pos sType decls) = do
@@ -49,31 +51,38 @@ instance ProgramRunner Stmt where
   runCode (BStmt _ block) =
     evalBasedOnReturn $ runAndKeepEnv $ runCode block
 
-  runCode (Decl pos sType [(NoInit _ ident)]) =
-    evalBasedOnReturn $ runCode $ Decl pos sType [(Init pos ident (defaultReturnValueForSimpleType sType))]
+  runCode (Decl pos sType [(NoInit pos2 ident)]) =
+    evalBasedOnReturn $ runCode $ Decl pos sType [(Init pos2 ident (defaultReturnValueForSimpleType sType))]
 
-  runCode (Decl _ sType [(Init _ ident expr)]) = evalBasedOnReturn $ do
+  runCode (Decl _ sType [(Init pos ident expr)]) = evalBasedOnReturn $ do
     x <- runCode expr
-    case x of
-      Left val -> modify $ putSimpleTypeValue ident val
-      Right val -> modify $ putFunctionTypeValue ident val
+    case isNameQualified ident of
+      True -> case x of
+        Left val -> modify $ putSimpleTypeValue ident val
+        Right val -> modify $ putFunctionTypeValue ident val
+      False -> throwError $ UnqualifiedIdException pos
     return $ Left None
 
   runCode (Decl pos sType decls) = evalBasedOnReturn $ do
     mapM_ (\decl -> runCode $ Decl pos sType [decl]) decls
     return $ Left None
 
-  runCode (Ass _ ident expr) = evalBasedOnReturn $ do
+  runCode (Ass pos ident expr) = evalBasedOnReturn $ do
+    env <- get
     x <- runCode expr
     case x of
-      Left val -> modify $ updateSimpleTypeValue ident val
-      Right val -> modify $ updateFunctionTypeValue ident val
-    return $ Left None
+      Left val -> evalBasedOnDefinedSimpleTypeValue ident env pos $ do
+        modify $ updateSimpleTypeValue ident val
+        return $ Left None
+      Right val -> evalBasedOnDefinedFunctionTypeValue ident env pos $ do
+        modify $ updateFunctionTypeValue ident val
+        return $ Left None
 
-  runCode (Incr _ ident) = evalBasedOnReturn $ do
+  runCode (Incr pos ident) = evalBasedOnReturn $ do
     env <- get
-    modify $ updateSimpleTypeValue ident (applyFun (\x -> x + 1) (getSimpleTypeValue ident env))
-    return $ Left None
+    evalBasedOnDefinedSimpleTypeValue ident env pos $ do
+      modify $ updateSimpleTypeValue ident (applyFun (\x -> x + 1) (getSimpleTypeValue ident env))
+      return $ Left None
 
   runCode (Decr _ ident) = evalBasedOnReturn $ do
     env <- get
@@ -84,7 +93,7 @@ instance ProgramRunner Stmt where
     x <- runCode expr
     case x of
       Left val -> modify $ updateReturnValue val
-      Right _ -> throwError $ WrongReturnTypeError pos
+      Right _ -> throwError $ WrongReturnTypeException pos
     return $ Left None
 
   runCode (VRet _) = evalBasedOnReturn $ do
@@ -98,7 +107,7 @@ instance ProgramRunner Stmt where
         runCode stmt
         return $ Left None
       Left (Environment.Environment.Bool False) -> return $ Left None
-      Right _ -> throwError $ WrongTypeError pos
+      Right _ -> throwError $ WrongTypeException pos
 
   runCode (CondElse pos expr ifStmt elseStmt) = evalBasedOnReturn $ runAndKeepEnv $ do
     x <- runCode expr
@@ -109,7 +118,7 @@ instance ProgramRunner Stmt where
       Left (Environment.Environment.Bool False) -> do
         runCode elseStmt
         return $ Left None
-      Right _ -> throwError $ WrongTypeError pos
+      Right _ -> throwError $ WrongTypeException pos
 
   runCode while@(While pos expr stmt) = evalBasedOnReturn $ runAndKeepEnv $ do
     x <- runCode expr
@@ -119,7 +128,7 @@ instance ProgramRunner Stmt where
         runCode while
         return $ Left None
       Left (Environment.Environment.Bool False) -> return $ Left None
-      Right _ -> throwError $ WrongTypeError pos
+      Right _ -> throwError $ WrongTypeException pos
 
   runCode (STopDef _ def) = evalBasedOnReturn $ do
     runCode def
@@ -134,7 +143,7 @@ instance ProgramRunner Expr where
       True -> return $ Left $ getSimpleTypeValue ident env
       False -> case isDefinedFunctionTypeValue ident env of
         True -> return $ Right $ getFunctionTypeValue ident env
-        False -> throwError $ UndefinedIdent pos
+        False -> throwError $ UndefinedIdentException pos
 
   runCode (ELitInt _ x) = return $ Left $ Environment.Environment.Int x
   runCode (ELitTrue _) = return $ Left $ Environment.Environment.Bool True
@@ -170,14 +179,14 @@ instance ProgramRunner Expr where
     x <- runCode expr
     case x of
       Left val -> return $ Left $ applyFun negate val
-      Right _ -> throwError $ WrongTypeError pos
+      Right _ -> throwError $ WrongTypeException pos
 
   runCode (Not pos expr) = do
     x <- runCode expr
     case x of
       Left (Environment.Environment.Bool True) -> return $ Left $ Environment.Environment.Bool False
       Left (Environment.Environment.Bool False) -> return $ Left $ Environment.Environment.Bool True
-      Right _ -> throwError $ WrongTypeError pos
+      Right _ -> throwError $ WrongTypeException pos
 
   runCode (EMul pos exprL op exprR) = do
     Left (Environment.Environment.Int x) <- runCode exprL

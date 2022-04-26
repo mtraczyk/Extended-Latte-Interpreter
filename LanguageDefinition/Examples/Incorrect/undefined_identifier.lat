@@ -1,0 +1,11 @@
+void fun() {
+  printInt(b);
+  return;
+}
+
+int main() {
+  int b = 3;
+  fun();
+
+  return 0;
+}

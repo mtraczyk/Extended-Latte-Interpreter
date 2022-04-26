@@ -12,6 +12,10 @@ import qualified Data.Map as M
 -- Buildin functions
 buildinFunctions = ["printInt", "printBool", "printString"]
 
+-- Unqualified identifiers
+unqualifiedIds = ["for", "int", "boolean", "string", "void", "if", "return",
+  "printInt", "printBool", "printString", "while", "else", "lambda"]
+
 maybeRunBuildinFunction :: Ident -> [Either SimpleType FunctionType] -> ProgramEvaluator -> ProgramEvaluator
 maybeRunBuildinFunction (Ident name) args ste = do
   case name `elem` buildinFunctions of
@@ -24,12 +28,27 @@ maybeRunBuildinFunction (Ident name) args ste = do
       Left val -> val
       Right _ -> Environment.Environment.Int 0
 
+evalBasedOnDefinedSimpleTypeValue :: Ident -> EvalEnvironment -> BNFC'Position -> ProgramEvaluator -> ProgramEvaluator
+evalBasedOnDefinedSimpleTypeValue name env pos ste = do
+  case isDefinedSimpleTypeValue name env of
+    True -> ste
+    False -> throwError $ UndefinedVariableException pos
+
+evalBasedOnDefinedFunctionTypeValue :: Ident -> EvalEnvironment -> BNFC'Position -> ProgramEvaluator -> ProgramEvaluator
+evalBasedOnDefinedFunctionTypeValue name env pos ste = do
+  case isDefinedFunctionTypeValue name env of
+    True -> ste
+    False -> throwError $ UndefinedFunctionException pos
+
 isReturnDefined :: EvalEnvironment -> Bool
 isReturnDefined env = let loc = getEnvLocation (Ident "return") (getVEnv env) in
   case M.lookup loc (getVStore env) of
     Just None -> False
     Just _ -> True
     Nothing -> False
+
+isNameQualified :: Ident -> Bool
+isNameQualified (Ident name) = not $ name `elem` unqualifiedIds
 
 evalBasedOnReturn :: ProgramEvaluator -> ProgramEvaluator
 evalBasedOnReturn ste = do
