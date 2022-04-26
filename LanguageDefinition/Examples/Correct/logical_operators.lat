@@ -1,0 +1,15 @@
+int main() {
+  boolean var = true;
+  boolean var2 = false;
+
+  printBool(var);
+  printBool(var || var2);
+  printBool(var && var2);
+  printBool(1 < 2);
+  printBool(1 <= 2);
+  printBool(1 > 2);
+  printBool(1 == 2);
+  printBool(1 != 2);
+
+  return 0;
+}

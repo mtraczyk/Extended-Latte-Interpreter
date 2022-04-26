@@ -1,0 +1,9 @@
+void show() {
+  printString("Hello World!");
+}
+
+int main() {
+  show();
+
+  return;
+}

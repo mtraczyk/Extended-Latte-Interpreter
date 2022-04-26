@@ -1,0 +1,14 @@
+void show(string message, int n) {
+  if (n >= 0) {
+    printString(message);
+    show(message, n - 1);
+  } else {
+    return;
+  }
+}
+
+int main() {
+  show("HELLO!", 7);
+
+  return 0;
+}

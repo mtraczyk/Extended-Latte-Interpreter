@@ -16,9 +16,13 @@ maybeRunBuildinFunction :: Ident -> [Either SimpleType FunctionType] -> ProgramE
 maybeRunBuildinFunction (Ident name) args ste = do
   case name `elem` buildinFunctions of
     True -> do
-      liftIO $ putStrLn (show args)
+      liftIO $ putStrLn $ show $ map fromEither' args
       return $ Left None
     False -> ste
+  where
+    fromEither' x = case x of
+      Left val -> val
+      Right _ -> Environment.Environment.Int 0
 
 isReturnDefined :: EvalEnvironment -> Bool
 isReturnDefined env = let loc = getEnvLocation (Ident "return") (getVEnv env) in

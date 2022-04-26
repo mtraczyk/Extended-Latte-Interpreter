@@ -1,0 +1,15 @@
+int main() {
+  string aux = "test";
+
+  void fun() {
+    printString(aux);
+    return;
+  }
+
+  int aux = 13;
+  fun();
+  boolean aux = true;
+  fun();
+
+  return 0;
+}
