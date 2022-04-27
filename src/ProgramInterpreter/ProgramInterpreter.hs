@@ -27,9 +27,8 @@ instance ProgramRunner Program where
 
 instance ProgramRunner TopDef where
   runCode (FnDef pos _ name args block) = do
-    env <- get
-    let vEnv = getVEnv env
-    let fEnv = getFEnv env
+    vEnv <- gets getVEnv
+    fEnv <- gets getFEnv
     let fun = TFun args block vEnv fEnv
     case isNameQualified name of
       True -> modify $ putFunctionTypeValue name fun
@@ -154,7 +153,7 @@ instance ProgramRunner Expr where
     argsVal <- mapM runCode expressions
     maybeRunBuildinFunction ident argsVal $ do
       env <- get
-      let fun@(TFun args block funVEnv funFEnv) = getFunctionTypeValue ident env
+      fun@(TFun args block funVEnv funFEnv) <- gets $ getFunctionTypeValue ident
       modify $ putVEnv funVEnv
       modify $ putFEnv funFEnv
       modify $ putFunctionTypeValue ident fun
