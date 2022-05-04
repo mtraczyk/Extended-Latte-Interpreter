@@ -9,7 +9,7 @@ GHC        = ghc
 all : Main
 
 Main : 
-	${GHC} Main.hs --make -o Latte
+	${GHC} -isrc src/Main.hs --make -o Latte
 
 # Rules for cleaning generated files.
 
