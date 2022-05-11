@@ -9,7 +9,7 @@ GHC        = ghc
 all : Main
 
 Main : 
-	${GHC} -isrc src/Main.hs --make -o Latte
+	${GHC} -isrc src/Main.hs --make -o interpreter
 
 # Rules for cleaning generated files.
 
@@ -19,7 +19,7 @@ clean :
 
 all_clean :
 	make clean
-	rm Latte
+	rm interpreter
 
 # EOF
 

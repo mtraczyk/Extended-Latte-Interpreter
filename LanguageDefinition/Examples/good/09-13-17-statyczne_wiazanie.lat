@@ -9,6 +9,7 @@ int main() {
   int aux = 13;
   fun();
   boolean aux = true;
+  printBool(aux);
   fun();
 
   return 0;

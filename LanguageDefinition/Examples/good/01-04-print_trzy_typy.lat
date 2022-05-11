@@ -1,0 +1,9 @@
+int main () {
+  int x = 3;
+  boolean y = true;
+  string z = "Hello";
+
+  printInt(x);
+  printBool(y);
+  printString(z);
+}
